@@ -6,7 +6,7 @@
 #include "rtweekend.hpp"
 #include "sphere.hpp"
 
-Color RayColor(const Ray& r, const Hittable& world);
+Color RayColor(const Ray& r, const Hittable& world, int depth);
 
 int main() {
     //  Image
@@ -15,6 +15,7 @@ int main() {
     const int imageWidth = 400;
     const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
     const int samplePerPixels = 100;
+    const int maxDepth = 50;
 
     // World
     HittableList world;
@@ -40,7 +41,7 @@ int main() {
                 auto u = (i + RandomDouble()) / (imageWidth - 1);
                 auto v = (j + RandomDouble()) / (imageHeight - 1);
                 Ray r = camera.GetRay(u, v);
-                pixelColor += RayColor(r, world);
+                pixelColor += RayColor(r, world, maxDepth);
             }
             WriteColor(std::cout, pixelColor, samplePerPixels);
         }
@@ -50,11 +51,15 @@ int main() {
     return 0;
 }
 
-Color RayColor(const Ray& r, const Hittable& world) {
+Color RayColor(const Ray& r, const Hittable& world, int depth) {
     HitRecord rec;
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0) return Color(0, 0, 0);
     if (world.Hit(r, 0, infinity, rec)) {
-        // 用法线的分量作为颜色
-        return 0.5 * (rec.normal + Color(1, 1, 1));
+        // 随机漫反射
+        Point3 target = rec.p + rec.normal + RandomInUnitSphere();
+        // 递归，多次反射
+        return 0.5 * RayColor(Ray(rec.p, target - rec.p), world, depth - 1);
     }
     Vec3 unitDir = UnitVector(r.Direction());
     auto t = 0.5 * (unitDir.Y() + 1.0);

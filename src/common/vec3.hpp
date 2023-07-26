@@ -39,6 +39,15 @@ class Vec3 {
     double LengthSquared() const {
         return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
     }
+
+    inline static Vec3 Random() {
+        return Vec3(RandomDouble(), RandomDouble(), RandomDouble());
+    }
+
+    inline static Vec3 Random(double min, double max) {
+        return Vec3(RandomDouble(min, max), RandomDouble(min, max),
+                    RandomDouble(min, max));
+    }
 };
 
 // Type aliases for vec3
@@ -82,3 +91,13 @@ inline Vec3 Cross(const Vec3 &u, const Vec3 &v) {
 }
 
 inline Vec3 UnitVector(Vec3 v) { return v / v.Length(); }
+
+Vec3 RandomInUnitSphere() {
+    // 在单位半径的球体内随机选择一个点
+    // todo 优化效率防止死循环
+    while (true) {
+        auto p = Vec3::Random(-1, 1);
+        if (p.LengthSquared() >= 1) continue;
+        return p;
+    }
+}
