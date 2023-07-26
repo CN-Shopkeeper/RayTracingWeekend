@@ -25,7 +25,7 @@ bool HittableList::Hit(const Ray& r, double t_min, double t_max,
     bool hitAnything = false;
     auto closestSoFar = t_max;
 
-    // ? 默认是按照距离倒序排序？
+    // 根据closestSoFar来决定最近的物体
     for (const auto& object : objects) {
         if (object->Hit(r, t_min, closestSoFar, tempRec)) {
             hitAnything = true;

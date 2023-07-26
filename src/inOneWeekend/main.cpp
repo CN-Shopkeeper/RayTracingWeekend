@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "camera.hpp"
 #include "color.hpp"
 #include "hittable_list.hpp"
 #include "rtweekend.hpp"
@@ -13,6 +14,7 @@ int main() {
     const auto aspectRatio = 16.0 / 9.0;
     const int imageWidth = 400;
     const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
+    const int samplePerPixels = 100;
 
     // World
     HittableList world;
@@ -21,17 +23,7 @@ int main() {
 
     // Camera
 
-    // [-1, 1] [-1, 1]
-    auto viewportHeight = 2.0;
-    auto viewportWidth = aspectRatio * viewportHeight;
-    // near plane
-    auto focalLength = 1.0;
-
-    auto origin = Point3{0, 0, 0};
-    auto horizontal = Vec3{viewportWidth, 0, 0};
-    auto vertical = Vec3{0, viewportHeight, 0};
-    auto lowerLeftCorner =
-        origin - horizontal / 2 - vertical / 2 - Vec3(0, 0, focalLength);
+    Camera camera;
 
     // Render
 
@@ -42,12 +34,15 @@ int main() {
     for (int j = imageHeight - 1; j >= 0; --j) {
         std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
         for (int i = 0; i < imageWidth; ++i) {
-            auto u = double(i) / (imageWidth - 1);
-            auto v = double(j) / (imageHeight - 1);
-            Ray r{origin,
-                  lowerLeftCorner + u * horizontal + v * vertical - origin};
-            Color pixelColor = RayColor(r, world);
-            WriteColor(std::cout, pixelColor);
+            Color pixelColor = Color{0, 0, 0};
+            for (int s = 0; s < samplePerPixels; ++s) {
+                // 一个像素取100条打在这个像素内的光线
+                auto u = (i + RandomDouble()) / (imageWidth - 1);
+                auto v = (j + RandomDouble()) / (imageHeight - 1);
+                Ray r = camera.GetRay(u, v);
+                pixelColor += RayColor(r, world);
+            }
+            WriteColor(std::cout, pixelColor, samplePerPixels);
         }
         std::cout << "\n";
     }
