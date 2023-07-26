@@ -1,11 +1,11 @@
 #include <iostream>
 
 #include "color.hpp"
-#include "ray.hpp"
-#include "vec3.hpp"
+#include "hittable_list.hpp"
+#include "rtweekend.hpp"
+#include "sphere.hpp"
 
-Color RayColor(const Ray& r);
-bool HitSphere(const Point3& center, double radius, const Ray& r);
+Color RayColor(const Ray& r, const Hittable& world);
 
 int main() {
     //  Image
@@ -13,6 +13,11 @@ int main() {
     const auto aspectRatio = 16.0 / 9.0;
     const int imageWidth = 400;
     const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
+
+    // World
+    HittableList world;
+    world.add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5));
+    world.add(std::make_shared<Sphere>(Point3(0, -100.5, -1), 100));
 
     // Camera
 
@@ -41,7 +46,7 @@ int main() {
             auto v = double(j) / (imageHeight - 1);
             Ray r{origin,
                   lowerLeftCorner + u * horizontal + v * vertical - origin};
-            Color pixelColor = RayColor(r);
+            Color pixelColor = RayColor(r, world);
             WriteColor(std::cout, pixelColor);
         }
         std::cout << "\n";
@@ -50,21 +55,13 @@ int main() {
     return 0;
 }
 
-Color RayColor(const Ray& r) {
-    if (HitSphere(Point3{0, 0, -1}, 0.5, r)) {
-        return Color{1, 0, 0};
+Color RayColor(const Ray& r, const Hittable& world) {
+    HitRecord rec;
+    if (world.Hit(r, 0, infinity, rec)) {
+        // 用法线的分量作为颜色
+        return 0.5 * (rec.normal + Color(1, 1, 1));
     }
     Vec3 unitDir = UnitVector(r.Direction());
     auto t = 0.5 * (unitDir.Y() + 1.0);
     return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
-}
-
-bool HitSphere(const Point3& center, double radius, const Ray& r) {
-    Vec3 oc = r.Origin() - center;
-    auto a = Dot(r.Direction(), r.Direction());
-    auto b = 2.0 * Dot(oc, r.Direction());
-    auto c = Dot(oc, oc) - radius * radius;
-    auto discriminat = b * b - 4 * a * c;
-    // 不考虑相切
-    return (discriminat > 0);
 }
