@@ -5,6 +5,7 @@
 #include "vec3.hpp"
 
 Color RayColor(const Ray& r);
+bool HitSphere(const Point3& center, double radius, const Ray& r);
 
 int main() {
     //  Image
@@ -50,7 +51,20 @@ int main() {
 }
 
 Color RayColor(const Ray& r) {
+    if (HitSphere(Point3{0, 0, -1}, 0.5, r)) {
+        return Color{1, 0, 0};
+    }
     Vec3 unitDir = UnitVector(r.Direction());
     auto t = 0.5 * (unitDir.Y() + 1.0);
     return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
+}
+
+bool HitSphere(const Point3& center, double radius, const Ray& r) {
+    Vec3 oc = r.Origin() - center;
+    auto a = Dot(r.Direction(), r.Direction());
+    auto b = 2.0 * Dot(oc, r.Direction());
+    auto c = Dot(oc, oc) - radius * radius;
+    auto discriminat = b * b - 4 * a * c;
+    // 不考虑相切
+    return (discriminat > 0);
 }
