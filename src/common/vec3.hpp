@@ -48,6 +48,12 @@ class Vec3 {
         return Vec3(RandomDouble(min, max), RandomDouble(min, max),
                     RandomDouble(min, max));
     }
+
+    bool NearZero() const {
+        // Return true if the vector is close to zero in all dimensions.
+        const auto s = 1e-8;
+        return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+    }
 };
 
 // Type aliases for vec3
@@ -102,14 +108,15 @@ Vec3 RandomInUnitSphere() {
     }
 }
 
-Vec3 RandomUnitVector() {
-    return UnitVector(RandomInUnitSphere());
-}
+Vec3 RandomUnitVector() { return UnitVector(RandomInUnitSphere()); }
 
-Vec3 RandomInHemisphere(const Vec3& normal) {
+Vec3 RandomInHemisphere(const Vec3 &normal) {
     Vec3 inUnitSphere = RandomInUnitSphere();
-    if (Dot(inUnitSphere, normal) > 0.0) // In the same hemisphere as the normal
+    if (Dot(inUnitSphere, normal) >
+        0.0)  // In the same hemisphere as the normal
         return inUnitSphere;
     else
         return -inUnitSphere;
 }
+
+Vec3 Reflect(const Vec3 &v, const Vec3 &n) { return v - 2 * Dot(v, n) * n; }

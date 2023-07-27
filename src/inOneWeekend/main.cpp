@@ -3,6 +3,7 @@
 #include "camera.hpp"
 #include "color.hpp"
 #include "hittable_list.hpp"
+#include "material.hpp"
 #include "rtweekend.hpp"
 #include "sphere.hpp"
 
@@ -18,9 +19,21 @@ int main() {
     const int maxDepth = 50;
 
     // World
+
     HittableList world;
-    world.add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5));
-    world.add(std::make_shared<Sphere>(Point3(0, -100.5, -1), 100));
+    auto material_ground = std::make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
+    auto material_center = std::make_shared<Lambertian>(Color(0.7, 0.3, 0.3));
+    auto material_left = std::make_shared<Metal>(Color(0.8, 0.8, 0.8));
+    auto material_right = std::make_shared<Metal>(Color(0.8, 0.6, 0.2));
+
+    world.add(std::make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0,
+                                       material_ground));
+    world.add(
+        std::make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
+    world.add(
+        std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
+    world.add(
+        std::make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
 
     // Camera
 
@@ -57,12 +70,13 @@ Color RayColor(const Ray& r, const Hittable& world, int depth) {
     if (depth <= 0) return Color(0, 0, 0);
     // 防止浮点数近似为0
     if (world.Hit(r, 0.001, infinity, rec)) {
-        // 随机漫反射
-        // Point3 target = rec.p + RandomInHemisphere(rec.normal);
-        // Lambertian Reflection
-        Point3 target = rec.p + rec.normal + RandomUnitVector();
-        // 递归，多次反射
-        return 0.5 * RayColor(Ray(rec.p, target - rec.p), world, depth - 1);
+        Ray scattered;
+        Color attenuation;
+        if (rec.matPtr->scatter(r, rec, attenuation, scattered)) {
+            // 递归，多次反射
+            return attenuation * RayColor(scattered, world, depth - 1);
+        }
+        return Color(0, 0, 0);
     }
     Vec3 unitDir = UnitVector(r.Direction());
     auto t = 0.5 * (unitDir.Y() + 1.0);
