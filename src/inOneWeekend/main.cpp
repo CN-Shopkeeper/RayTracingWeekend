@@ -55,9 +55,12 @@ Color RayColor(const Ray& r, const Hittable& world, int depth) {
     HitRecord rec;
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0) return Color(0, 0, 0);
-    if (world.Hit(r, 0, infinity, rec)) {
+    // 防止浮点数近似为0
+    if (world.Hit(r, 0.001, infinity, rec)) {
         // 随机漫反射
-        Point3 target = rec.p + rec.normal + RandomInUnitSphere();
+        // Point3 target = rec.p + RandomInHemisphere(rec.normal);
+        // Lambertian Reflection
+        Point3 target = rec.p + rec.normal + RandomUnitVector();
         // 递归，多次反射
         return 0.5 * RayColor(Ray(rec.p, target - rec.p), world, depth - 1);
     }
