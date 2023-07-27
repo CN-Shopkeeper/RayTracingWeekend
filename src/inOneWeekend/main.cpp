@@ -20,6 +20,7 @@ int main() {
 
     // World
 
+    auto R = cos(pi / 4);
     HittableList world;
     auto material_ground = std::make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
     // auto material_center = std::make_shared<Lambertian>(Color(0.7, 0.3,
@@ -43,7 +44,8 @@ int main() {
 
     // Camera
 
-    Camera camera;
+    Camera camera(Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0), 20.0,
+                  aspectRatio);
 
     // Render
 
