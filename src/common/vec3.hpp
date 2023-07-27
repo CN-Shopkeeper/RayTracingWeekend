@@ -120,3 +120,11 @@ Vec3 RandomInHemisphere(const Vec3 &normal) {
 }
 
 Vec3 Reflect(const Vec3 &v, const Vec3 &n) { return v - 2 * Dot(v, n) * n; }
+
+// 将折射光线拆分成axis-align的两条光线
+Vec3 Refract(const Vec3 &uv, const Vec3 &n, double etaiOverEtat) {
+    auto cosTheta = fmin(Dot(-uv, n), 1.0);
+    Vec3 rOutPerp = etaiOverEtat * (uv + cosTheta * n);
+    Vec3 rOutParallel = -sqrt(fabs(1.0 - rOutPerp.LengthSquared())) * n;
+    return rOutPerp + rOutParallel;
+}
