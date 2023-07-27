@@ -44,8 +44,13 @@ int main() {
 
     // Camera
 
-    Camera camera(Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0), 20.0,
-                  aspectRatio);
+    Point3 lookFrom = Point3(-2, 2, 1);
+    Point3 lookAt = Point3(0, 0, -1);
+    Vec3 vup = Vec3(0, 1, 0);
+    auto distToFocus = (lookFrom - lookAt).Length();
+    auto aperture = 2.0;
+    Camera camera(lookFrom, lookAt, vup, 20.0, aspectRatio, aperture,
+                  distToFocus);
 
     // Render
 

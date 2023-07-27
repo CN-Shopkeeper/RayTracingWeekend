@@ -8,28 +8,37 @@ class Camera {
     Point3 lowerLeftCorner_;
     Vec3 horizontal_;
     Vec3 vertical_;
+    Vec3 u_, v_, w_;
+    double lensRadius_;
 
    public:
     Camera(Point3 lookfrom, Point3 lookat, Vec3 vup,
            double vfov,  // vertical field-of-view in degrees
-           double aspectRatio) {
+           double aspectRatio, double aperture, double focusDist) {
         auto theta = degrees_to_radians(vfov);
         auto h = tan(theta / 2);
         auto viewportHeight = 2.0 * h;
         auto viewportWidth = aspectRatio * viewportHeight;
 
-        auto w = UnitVector(lookfrom - lookat);
-        auto u = UnitVector(Cross(vup, w));
-        auto v = Cross(w, u);
+        w_ = UnitVector(lookfrom - lookat);
+        u_ = UnitVector(Cross(vup, w_));
+        v_ = Cross(w_, u_);
 
+        // * 这些操作保证了落在focus plane上的物体一定是精确的，
+        // * 反之，落在非focus plane上则越远越模糊
         origin_ = lookfrom;
-        horizontal_ = viewportWidth * u;
-        vertical_ = viewportHeight * v;
-        lowerLeftCorner_ = origin_ - horizontal_ / 2 - vertical_ / 2 - w;
+        horizontal_ = focusDist * viewportWidth * u_;
+        vertical_ = focusDist * viewportHeight * v_;
+        lowerLeftCorner_ =
+            origin_ - horizontal_ / 2 - vertical_ / 2 - focusDist * w_;
+
+        lensRadius_ = aperture / 2;
     }
 
     Ray GetRay(double s, double t) const {
-        return Ray(origin_, lowerLeftCorner_ + s * horizontal_ + t * vertical_ -
-                                origin_);
+        Vec3 rd = lensRadius_ * RandomInUnitDisk();
+        Vec3 offset = u_ * rd.X() + v_ * rd.Y();
+        return Ray(origin_ + offset, lowerLeftCorner_ + s * horizontal_ +
+                                         t * vertical_ - origin_ - offset);
     }
 };

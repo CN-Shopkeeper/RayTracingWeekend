@@ -128,3 +128,11 @@ Vec3 Refract(const Vec3 &uv, const Vec3 &n, double etaiOverEtat) {
     Vec3 rOutParallel = -sqrt(fabs(1.0 - rOutPerp.LengthSquared())) * n;
     return rOutPerp + rOutParallel;
 }
+
+Vec3 RandomInUnitDisk() {
+    while (true) {
+        auto p = Vec3(RandomDouble(-1, 1), RandomDouble(-1, 1), 0);
+        if (p.LengthSquared() >= 1) continue;
+        return p;
+    }
+}
