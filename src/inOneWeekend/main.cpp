@@ -14,7 +14,7 @@ int main() {
     //  Image
 
     const auto aspectRatio = 16.0 / 9.0;
-    const int imageWidth = 800;
+    const int imageWidth = 1920;
     const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
     const int samplePerPixels = 500;
     const int maxDepth = 50;
