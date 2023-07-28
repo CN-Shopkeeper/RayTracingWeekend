@@ -10,11 +10,14 @@ class Camera {
     Vec3 vertical_;
     Vec3 u_, v_, w_;
     double lensRadius_;
+    // shutter open/close times
+    double time0_, time1_;
 
    public:
     Camera(Point3 lookfrom, Point3 lookat, Vec3 vup,
            double vfov,  // vertical field-of-view in degrees
-           double aspectRatio, double aperture, double focusDist) {
+           double aspectRatio, double aperture, double focusDist,
+           double time0 = 0, double time1 = 0) {
         auto theta = degrees_to_radians(vfov);
         auto h = tan(theta / 2);
         auto viewportHeight = 2.0 * h;
@@ -33,12 +36,16 @@ class Camera {
             origin_ - horizontal_ / 2 - vertical_ / 2 - focusDist * w_;
 
         lensRadius_ = aperture / 2;
+        time0_ = time0;
+        time1_ = time1;
     }
 
     Ray GetRay(double s, double t) const {
         Vec3 rd = lensRadius_ * RandomInUnitDisk();
         Vec3 offset = u_ * rd.X() + v_ * rd.Y();
-        return Ray(origin_ + offset, lowerLeftCorner_ + s * horizontal_ +
-                                         t * vertical_ - origin_ - offset);
+        return Ray(origin_ + offset,
+                   lowerLeftCorner_ + s * horizontal_ + t * vertical_ -
+                       origin_ - offset,
+                   RandomDouble(time0_, time1_));
     }
 };
