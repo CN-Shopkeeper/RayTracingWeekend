@@ -6,6 +6,7 @@
 #include "hittable_list.hpp"
 #include "material.hpp"
 #include "moving_sphere.hpp"
+#include "perlin.hpp"
 #include "rtweekend.hpp"
 #include "sphere.hpp"
 #include "texture.hpp"
@@ -13,6 +14,7 @@
 Color RayColor(const Ray& r, const Hittable& world, int depth);
 HittableList RandomScene();
 HittableList TwoSpheres();
+HittableList TwoPerlinSpheres();
 
 int main() {
     //  Image
@@ -40,12 +42,19 @@ int main() {
             aperture = 0.1;
             break;
 
-        default:
+        case 2:
             world = TwoSpheres();
             lookFrom = Point3(13, 2, 3);
             lookAt = Point3(0, 0, 0);
             vfov = 20.0;
 
+            break;
+
+        default:
+            world = TwoPerlinSpheres();
+            lookFrom = Point3(13, 2, 3);
+            lookAt = Point3(0, 0, 0);
+            vfov = 20.0;
             break;
     }
 
@@ -161,5 +170,16 @@ HittableList TwoSpheres() {
         Point3(0, -10, 0), 10, std::make_shared<Lambertian>(checker)));
     objects.add(std::make_shared<Sphere>(
         Point3(0, 10, 0), 10, std::make_shared<Lambertian>(checker)));
+    return objects;
+}
+
+HittableList TwoPerlinSpheres() {
+    HittableList objects;
+
+    auto pertext = std::make_shared<NoiseTexture>(4);
+    objects.add(std::make_shared<Sphere>(
+        Point3(0, -1000, 0), 1000, std::make_shared<Lambertian>(pertext)));
+    objects.add(std::make_shared<Sphere>(
+        Point3(0, 2, 0), 2, std::make_shared<Lambertian>(pertext)));
     return objects;
 }

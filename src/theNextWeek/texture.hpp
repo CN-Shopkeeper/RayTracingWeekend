@@ -1,5 +1,6 @@
 #pragma once
 
+#include "perlin.hpp"
 #include "rtweekend.hpp"
 
 class Texture {
@@ -42,5 +43,20 @@ class CheckerTexture : public Texture {
         } else {
             return even->Value(u, v, p);
         }
+    }
+};
+
+class NoiseTexture : public Texture {
+   private:
+    Perlin noise_;
+    double scale_;
+
+   public:
+    NoiseTexture() {}
+    NoiseTexture(double sc) : scale_(sc) {}
+
+    virtual Color Value(double u, double v, const Point3& p) const override {
+        return Color{1, 1, 1} * 0.5 *
+               (1 + sin(scale_ * p.Z() + 10 * noise_.Turb(p)));
     }
 };
