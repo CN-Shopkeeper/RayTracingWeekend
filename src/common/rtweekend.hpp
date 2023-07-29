@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -25,6 +26,11 @@ inline double RandomDouble() {
 inline double RandomDouble(double min, double max) {
     // Returns a random real in [min,max).
     return min + (max - min) * RandomDouble();
+}
+
+inline int RandomInt(int min, int max) {
+    // Returns a random integer in [min,max].
+    return static_cast<int>(RandomDouble(min, max + 1));
 }
 
 inline double Clamp(double x, double min, double max) {

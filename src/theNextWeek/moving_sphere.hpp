@@ -23,6 +23,9 @@ class MovingSphere : public Hittable {
     virtual bool Hit(const Ray& r, double t_min, double t_max,
                      HitRecord& rec) const override;
 
+    virtual bool BoundingBox(double time0, double time1,
+                             AABB& outputBox) const override;
+
     Point3 Center(double time) const;
 };
 
@@ -54,6 +57,15 @@ bool MovingSphere::Hit(const Ray& r, double t_min, double t_max,
     rec.matPtr = matPtr;
 
     return true;
+}
+
+bool MovingSphere::BoundingBox(double time0, double time1,
+                               AABB& outputBox) const {
+    AABB box0{Center(time0) - Vec3(radius, radius, radius),
+              Center(time0) + Vec3(radius, radius, radius)};
+    AABB box1{Center(time1) - Vec3(radius, radius, radius),
+              Center(time1) + Vec3(radius, radius, radius)};
+    outputBox = SurroundingBox(box0, box1);
 }
 
 Point3 MovingSphere::Center(double time) const {

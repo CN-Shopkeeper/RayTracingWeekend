@@ -15,6 +15,8 @@ class Sphere : public Hittable {
 
     virtual bool Hit(const Ray& r, double t_min, double t_max,
                      HitRecord& rec) const override;
+    virtual bool BoundingBox(double time0, double time1,
+                             AABB& outputBox) const override;
 };
 
 bool Sphere::Hit(const Ray& r, double t_min, double t_max,
@@ -41,5 +43,11 @@ bool Sphere::Hit(const Ray& r, double t_min, double t_max,
     rec.SetFaceNormal(r, outwardNormal);
     rec.matPtr = matPtr;
 
+    return true;
+}
+
+bool Sphere::BoundingBox(double time0, double time1, AABB& outputBox) const {
+    outputBox = AABB{center - Vec3{radius, radius, radius},
+                      center + Vec3{radius, radius, radius}};
     return true;
 }

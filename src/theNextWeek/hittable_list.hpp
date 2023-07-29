@@ -17,6 +17,9 @@ class HittableList : public Hittable {
 
     virtual bool Hit(const Ray& r, double t_min, double t_max,
                      HitRecord& rec) const override;
+
+    virtual bool BoundingBox(double time0, double time1,
+                             AABB& outputBox) const override;
 };
 
 bool HittableList::Hit(const Ray& r, double t_min, double t_max,
@@ -35,4 +38,24 @@ bool HittableList::Hit(const Ray& r, double t_min, double t_max,
     }
 
     return hitAnything;
+}
+
+bool HittableList::BoundingBox(double time0, double time1,
+                               AABB& outputBox) const {
+    if (objects.empty()) {
+        return false;
+    }
+
+    AABB tempBox;
+    bool firstBox = true;
+
+    for (const auto& object : objects) {
+        if (!object->BoundingBox(time0, time1, tempBox)) {
+            return false;
+        }
+        outputBox = firstBox ? tempBox : SurroundingBox(outputBox, tempBox);
+        firstBox = false;
+    }
+
+    return true;
 }

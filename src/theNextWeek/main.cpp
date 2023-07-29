@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "bvh.hpp"
 #include "camera.hpp"
 #include "color.hpp"
 #include "hittable_list.hpp"
