@@ -66,6 +66,7 @@ bool MovingSphere::BoundingBox(double time0, double time1,
     AABB box1{Center(time1) - Vec3(radius, radius, radius),
               Center(time1) + Vec3(radius, radius, radius)};
     outputBox = SurroundingBox(box0, box1);
+    return true;
 }
 
 Point3 MovingSphere::Center(double time) const {

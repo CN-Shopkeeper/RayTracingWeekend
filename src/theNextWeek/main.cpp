@@ -8,9 +8,11 @@
 #include "moving_sphere.hpp"
 #include "rtweekend.hpp"
 #include "sphere.hpp"
+#include "texture.hpp"
 
 Color RayColor(const Ray& r, const Hittable& world, int depth);
 HittableList RandomScene();
+HittableList TwoSpheres();
 
 int main() {
     //  Image
@@ -23,16 +25,35 @@ int main() {
 
     // World
 
-    auto world = RandomScene();
+    HittableList world;
+    Point3 lookFrom;
+    Point3 lookAt;
+    auto vfov = 40.0;
+    auto aperture = 0.0;
+
+    switch (0) {
+        case 1:
+            world = RandomScene();
+            lookFrom = Point3(13, 2, 3);
+            lookAt = Point3(0, 0, 0);
+            vfov = 20.0;
+            aperture = 0.1;
+            break;
+
+        default:
+            world = TwoSpheres();
+            lookFrom = Point3(13, 2, 3);
+            lookAt = Point3(0, 0, 0);
+            vfov = 20.0;
+
+            break;
+    }
 
     // Camera
 
-    Point3 lookFrom = Point3(13, 2, 3);
-    Point3 lookAt = Point3(0, 0, 0);
     Vec3 vup = Vec3(0, 1, 0);
     auto distToFocus = 10.0;
-    auto aperture = 0.1;
-    Camera camera(lookFrom, lookAt, vup, 20.0, aspectRatio, aperture,
+    Camera camera(lookFrom, lookAt, vup, vfov, aspectRatio, aperture,
                   distToFocus, 0.0, 1.0);
 
     // Render
@@ -82,9 +103,10 @@ Color RayColor(const Ray& r, const Hittable& world, int depth) {
 HittableList RandomScene() {
     HittableList world;
 
-    auto groundMaterial = std::make_shared<Lambertian>(Color(0.5, 0.5, 0.5));
-    world.add(
-        std::make_shared<Sphere>(Point3(0, -1000, 0), 1000, groundMaterial));
+    auto checker = std::make_shared<CheckerTexture>(Color(0.2, 0.3, 0.1),
+                                                    Color(0.9, 0.9, 0.9));
+    world.add(std::make_shared<Sphere>(Point3(0, -1000, 0), 1000,
+                                       std::make_shared<Lambertian>(checker)));
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
             auto chooseMat = RandomDouble();
@@ -128,4 +150,16 @@ HittableList RandomScene() {
     world.add(std::make_shared<Sphere>(Point3(4, 1, 0), 1.0, material3));
 
     return world;
+}
+
+HittableList TwoSpheres() {
+    HittableList objects;
+
+    auto checker = std::make_shared<CheckerTexture>(Color(0.2, 0.3, 0.1),
+                                                    Color(0.9, 0.9, 0.9));
+    objects.add(std::make_shared<Sphere>(
+        Point3(0, -10, 0), 10, std::make_shared<Lambertian>(checker)));
+    objects.add(std::make_shared<Sphere>(
+        Point3(0, 10, 0), 10, std::make_shared<Lambertian>(checker)));
+    return objects;
 }

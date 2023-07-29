@@ -13,6 +13,10 @@ class HitRecord {
     std::shared_ptr<Material> matPtr;
     double t;
 
+    // 对于球体的一个点(θ,ϕ)
+    // 其纹理坐标u = ϕ/2Π, v = θ/Π
+    double u, v;
+
     bool front_face;
 
     inline void SetFaceNormal(const Ray& r, const Vec3& outward_normal) {

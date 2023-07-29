@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rtweekend.hpp"
+#include "texture.hpp"
 
 class HitRecord;
 
@@ -12,9 +13,10 @@ class Material {
 
 class Lambertian : public Material {
    public:
-    Color albedo;
+    std::shared_ptr<Texture> albedo;
 
-    Lambertian(const Color& a) : albedo(a) {}
+    Lambertian(const Color& a) : albedo(std::make_shared<SolidColor>(a)) {}
+    Lambertian(std::shared_ptr<Texture> a) : albedo(a) {}
 
     virtual bool Scatter(const Ray& rayIn, const HitRecord& rec,
                          Color& attenuation, Ray& scattered) const override {
@@ -28,7 +30,7 @@ class Lambertian : public Material {
         if (scatterDirection.NearZero()) scatterDirection = rec.normal;
 
         scattered = Ray(rec.p, scatterDirection, rayIn.Time());
-        attenuation = albedo;
+        attenuation = albedo->Value(rec.u, rec.v, rec.p);
         return true;
     }
 };

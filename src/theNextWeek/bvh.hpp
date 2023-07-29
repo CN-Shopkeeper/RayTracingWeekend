@@ -4,6 +4,33 @@
 #include "hittable_list.hpp"
 #include "rtweekend.hpp"
 
+inline bool BoxCompare(const std::shared_ptr<Hittable> a,
+                       const std::shared_ptr<Hittable> b, int axis) {
+    AABB boxA;
+    AABB boxB;
+
+    if (!a->BoundingBox(0, 0, boxA) || !b->BoundingBox(0, 0, boxB)) {
+        std::cerr << "No bounding box in bvh_node constructor.\n";
+    }
+
+    return boxA.Min().e[axis] < boxB.Min().e[axis];
+}
+
+bool BoxCompareX(const std::shared_ptr<Hittable> a,
+                 const std::shared_ptr<Hittable> b) {
+    return BoxCompare(a, b, 0);
+}
+
+bool BoxCompareY(const std::shared_ptr<Hittable> a,
+                 const std::shared_ptr<Hittable> b) {
+    return BoxCompare(a, b, 1);
+}
+
+bool BoxCompareZ(const std::shared_ptr<Hittable> a,
+                 const std::shared_ptr<Hittable> b) {
+    return BoxCompare(a, b, 2);
+}
+
 class BVHNode : public Hittable {
    public:
     std::shared_ptr<Hittable> left;
@@ -79,31 +106,4 @@ bool BVHNode::Hit(const Ray& r, double tMin, double tMax,
 bool BVHNode::BoundingBox(double time0, double time1, AABB& outputBox) const {
     outputBox = box;
     return true;
-}
-
-inline bool BoxCompare(const std::shared_ptr<Hittable> a,
-                       const std::shared_ptr<Hittable> b, int axis) {
-    AABB boxA;
-    AABB boxB;
-
-    if (!a->BoundingBox(0, 0, boxA) || !b->BoundingBox(0, 0, boxB)) {
-        std::cerr << "No bounding box in bvh_node constructor.\n";
-    }
-
-    return boxA.Min().e[axis] < boxB.Min().e[axis];
-}
-
-bool BoxCompareX(const std::shared_ptr<Hittable> a,
-                 const std::shared_ptr<Hittable> b) {
-    return BoxCompare(a, b, 0);
-}
-
-bool BoxCompareY(const std::shared_ptr<Hittable> a,
-                 const std::shared_ptr<Hittable> b) {
-    return BoxCompare(a, b, 1);
-}
-
-bool BoxCompareZ(const std::shared_ptr<Hittable> a,
-                 const std::shared_ptr<Hittable> b) {
-    return BoxCompare(a, b, 2);
 }
