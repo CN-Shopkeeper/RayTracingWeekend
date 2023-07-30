@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "aarec.hpp"
 #include "bvh.hpp"
 #include "camera.hpp"
 #include "color.hpp"
@@ -11,19 +12,21 @@
 #include "sphere.hpp"
 #include "texture.hpp"
 
-Color RayColor(const Ray& r, const Hittable& world, int depth);
+Color RayColor(const Ray& r, const Color& background, const Hittable& world,
+               int depth);
 HittableList RandomScene();
 HittableList TwoSpheres();
 HittableList TwoPerlinSpheres();
 HittableList Earth();
+HittableList SimpleLight();
+HittableList CornellBox();
 
 int main() {
     //  Image
 
-    const auto aspectRatio = 16.0 / 9.0;
-    const int imageWidth = 400;
-    const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
-    const int samplePerPixels = 100;
+    auto aspectRatio = 16.0 / 9.0;
+    int imageWidth = 400;
+    int samplePerPixels = 100;
     const int maxDepth = 50;
 
     // World
@@ -33,10 +36,12 @@ int main() {
     Point3 lookAt;
     auto vfov = 40.0;
     auto aperture = 0.0;
+    Color background{0, 0, 0};
 
     switch (0) {
         case 1:
             world = RandomScene();
+            background = Color{0.7, 0.8, 1.0};
             lookFrom = Point3(13, 2, 3);
             lookAt = Point3(0, 0, 0);
             vfov = 20.0;
@@ -45,6 +50,7 @@ int main() {
 
         case 2:
             world = TwoSpheres();
+            background = Color{0.7, 0.8, 1.0};
             lookFrom = Point3(13, 2, 3);
             lookAt = Point3(0, 0, 0);
             vfov = 20.0;
@@ -53,21 +59,46 @@ int main() {
 
         case 3:
             world = TwoPerlinSpheres();
+            background = Color{0.7, 0.8, 1.0};
             lookFrom = Point3(13, 2, 3);
             lookAt = Point3(0, 0, 0);
             vfov = 20.0;
+            break;
+
+        case 4:
+            world = Earth();
+            background = Color{0.7, 0.8, 1.0};
+            lookFrom = Point3(13, 2, 3);
+            lookAt = Point3(0, 0, 0);
+            vfov = 20.0;
+            break;
+
+        case 5:
+            world = SimpleLight();
+            samplePerPixels = 400;
+            background = Color{0.0, 0.0, 0.0};
+            lookFrom = Point3(26, 3, 6);
+            lookAt = Point3(0, 2, 0);
+            vfov = 20.0;
+            break;
 
         default:
-            world = Earth();
-            lookFrom = Point3(13, 2, 3);
-            lookAt = Point3(0, 0, 0);
-            vfov = 20.0;
+        case 6:
+            world = CornellBox();
+            aspectRatio = 1.0;
+            imageWidth = 600;
+            samplePerPixels = 200;
+            background = Color(0, 0, 0);
+            lookFrom = Point3(278, 278, -800);
+            lookAt = Point3(278, 278, 0);
+            vfov = 40.0;
             break;
     }
 
     // Camera
 
     Vec3 vup = Vec3(0, 1, 0);
+    const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
     auto distToFocus = 10.0;
     Camera camera(lookFrom, lookAt, vup, vfov, aspectRatio, aperture,
                   distToFocus, 0.0, 1.0);
@@ -87,7 +118,7 @@ int main() {
                 auto u = (i + RandomDouble()) / (imageWidth - 1);
                 auto v = (j + RandomDouble()) / (imageHeight - 1);
                 Ray r = camera.GetRay(u, v);
-                pixelColor += RayColor(r, world, maxDepth);
+                pixelColor += RayColor(r, background, world, maxDepth);
             }
             WriteColor(std::cout, pixelColor, samplePerPixels);
         }
@@ -97,23 +128,29 @@ int main() {
     return 0;
 }
 
-Color RayColor(const Ray& r, const Hittable& world, int depth) {
+Color RayColor(const Ray& r, const Color& background, const Hittable& world,
+               int depth) {
     HitRecord rec;
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0) return Color(0, 0, 0);
+
+    // If the ray hits nothing, return the background color.
     // 防止浮点数近似为0
-    if (world.Hit(r, 0.001, infinity, rec)) {
-        Ray scattered;
-        Color attenuation;
-        if (rec.matPtr->Scatter(r, rec, attenuation, scattered)) {
-            // 递归，多次反射
-            return attenuation * RayColor(scattered, world, depth - 1);
-        }
-        return Color(0, 0, 0);
+    if (!world.Hit(r, 0.001, infinity, rec)) {
+        return background;
     }
-    Vec3 unitDir = UnitVector(r.Direction());
-    auto t = 0.5 * (unitDir.Y() + 1.0);
-    return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
+
+    Ray scattered;
+    Color attenuation;
+    Color emitted = rec.matPtr->Emitted(rec.u, rec.v, rec.p);
+
+    if (!rec.matPtr->Scatter(r, rec, attenuation, scattered)) {
+        return emitted;
+    }
+
+    // 递归，多次反射
+    return emitted +
+           attenuation * RayColor(scattered, background, world, depth - 1);
 }
 
 HittableList RandomScene() {
@@ -198,4 +235,36 @@ HittableList Earth() {
     auto globe = std::make_shared<Sphere>(Point3{0, 0, 0}, 2, earthSurface);
 
     return HittableList(globe);
+}
+
+HittableList SimpleLight() {
+    HittableList objects;
+
+    auto pertext = std::make_shared<NoiseTexture>(4);
+    objects.add(std::make_shared<Sphere>(
+        Point3(0, -1000, 0), 1000, std::make_shared<Lambertian>(pertext)));
+    objects.add(std::make_shared<Sphere>(
+        Point3(0, 2, 0), 2, std::make_shared<Lambertian>(pertext)));
+
+    // ? 颜色值超出范围
+    auto diffLight = std::make_shared<DiffuseLight>(Color{4, 4, 4});
+    objects.add(std::make_shared<XYRect>(3, 5, 1, 3, -2, diffLight));
+    return objects;
+}
+
+HittableList CornellBox() {
+    HittableList objects;
+    auto red = std::make_shared<Lambertian>(Color{0.65, 0.05, 0.05});
+    auto white = std::make_shared<Lambertian>(Color{0.73, 0.73, 0.73});
+    auto green = std::make_shared<Lambertian>(Color{.12, .45, .15});
+    auto light = std::make_shared<DiffuseLight>(Color{15, 15, 15});
+
+    objects.add(std::make_shared<YZRect>(0, 555, 0, 555, 555, green));
+    objects.add(std::make_shared<YZRect>(0, 555, 0, 555, 0, red));
+    objects.add(std::make_shared<XZRect>(213, 343, 227, 332, 554, light));
+    objects.add(std::make_shared<XZRect>(0, 555, 0, 555, 0, white));
+    objects.add(std::make_shared<XZRect>(0, 555, 0, 555, 555, white));
+    objects.add(std::make_shared<XYRect>(0, 555, 0, 555, 555, white));
+
+    return objects;
 }

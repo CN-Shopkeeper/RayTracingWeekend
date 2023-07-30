@@ -9,6 +9,10 @@ class Material {
    public:
     virtual bool Scatter(const Ray& rayIn, const HitRecord& rec,
                          Color& attenuation, Ray& scattered) const = 0;
+
+    virtual Color Emitted(double u, double v, const Point3& p) const {
+        return Color{0, 0, 0};
+    }
 };
 
 class Lambertian : public Material {
@@ -80,5 +84,22 @@ class Dielectric : public Material {
 
         scattered = Ray(rec.p, direction, rayIn.Time());
         return true;
+    }
+};
+
+class DiffuseLight : public Material {
+   public:
+    std::shared_ptr<Texture> emit;
+
+    DiffuseLight(std::shared_ptr<Texture> a) : emit(a) {}
+    DiffuseLight(Color c) : emit(std::make_shared<SolidColor>(c)) {}
+
+    virtual bool Scatter(const Ray& rayIn, const HitRecord& rec,
+                         Color& attenuation, Ray& scattered) const {
+        return false;
+    }
+
+    virtual Color Emitted(double u, double v, const Point3& p) const {
+        return emit->Value(u, v, p);
     }
 };
