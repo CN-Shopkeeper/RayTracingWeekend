@@ -50,6 +50,14 @@ class Metal : public Material {
 };
 
 class Dielectric : public Material {
+   private:
+    static double reflectance(double cosine, double ref_idx) {
+        // Use Schlick's approximation for reflectance.
+        auto r0 = (1 - ref_idx) / (1 + ref_idx);
+        r0 = r0 * r0;
+        return r0 + (1 - r0) * pow((1 - cosine), 5);
+    }
+
    public:
     // index of Refraction
     double ir;
@@ -69,7 +77,8 @@ class Dielectric : public Material {
         bool cannotRefract = refractionRatio * sinTheta > 1.0;
         Vec3 direction;
 
-        if (cannotRefract) {
+        if (cannotRefract ||
+            reflectance(cosTheta, refractionRatio) > RandomDouble()) {
             direction = Reflect(unitDirection, rec.normal);
         } else {
             direction = Refract(unitDirection, rec.normal, refractionRatio);
