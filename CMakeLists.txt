@@ -5,6 +5,8 @@ project(
     LANGUAGES CXX
 )
 
+include(cmake/copyresources.cmake)
+
 # Set to c++11
 set(CMAKE_CXX_STANDARD 11)
 
