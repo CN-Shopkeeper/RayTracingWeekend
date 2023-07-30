@@ -5,6 +5,7 @@
 #include "bvh.hpp"
 #include "camera.hpp"
 #include "color.hpp"
+#include "constant_medium.hpp"
 #include "hittable_list.hpp"
 #include "material.hpp"
 #include "moving_sphere.hpp"
@@ -21,6 +22,7 @@ HittableList TwoPerlinSpheres();
 HittableList Earth();
 HittableList SimpleLight();
 HittableList CornellBox();
+HittableList CornellSmoke();
 
 int main() {
     //  Image
@@ -83,13 +85,23 @@ int main() {
             vfov = 20.0;
             break;
 
-        default:
         case 6:
             world = CornellBox();
             aspectRatio = 1.0;
             imageWidth = 600;
             samplePerPixels = 200;
             background = Color(0, 0, 0);
+            lookFrom = Point3(278, 278, -800);
+            lookAt = Point3(278, 278, 0);
+            vfov = 40.0;
+            break;
+
+        default:
+        case 7:
+            world = CornellSmoke();
+            aspectRatio = 1.0;
+            imageWidth = 600;
+            samplePerPixels = 200;
             lookFrom = Point3(278, 278, -800);
             lookAt = Point3(278, 278, 0);
             vfov = 40.0;
@@ -278,5 +290,36 @@ HittableList CornellBox() {
     box2 = std::make_shared<RotateY>(box2, -18);
     box2 = std::make_shared<Translate>(box2, Vec3{130, 0, 65});
     objects.add(box2);
+    return objects;
+}
+
+HittableList CornellSmoke() {
+    HittableList objects;
+
+    auto red = std::make_shared<Lambertian>(Color(.65, .05, .05));
+    auto white = std::make_shared<Lambertian>(Color(.73, .73, .73));
+    auto green = std::make_shared<Lambertian>(Color(.12, .45, .15));
+    auto light = std::make_shared<DiffuseLight>(Color(7, 7, 7));
+
+    objects.add(std::make_shared<YZRect>(0, 555, 0, 555, 555, green));
+    objects.add(std::make_shared<YZRect>(0, 555, 0, 555, 0, red));
+    objects.add(std::make_shared<XZRect>(113, 443, 127, 432, 554, light));
+    objects.add(std::make_shared<XZRect>(0, 555, 0, 555, 555, white));
+    objects.add(std::make_shared<XZRect>(0, 555, 0, 555, 0, white));
+    objects.add(std::make_shared<XYRect>(0, 555, 0, 555, 555, white));
+
+    std::shared_ptr<Hittable> box1 =
+        std::make_shared<Box>(Point3(0, 0, 0), Point3(165, 330, 165), white);
+    box1 = std::make_shared<RotateY>(box1, 15);
+    box1 = std::make_shared<Translate>(box1, Vec3(265, 0, 295));
+
+    std::shared_ptr<Hittable> box2 =
+        std::make_shared<Box>(Point3(0, 0, 0), Point3(165, 165, 165), white);
+    box2 = std::make_shared<RotateY>(box2, -18);
+    box2 = std::make_shared<Translate>(box2, Vec3(130, 0, 65));
+
+    objects.add(std::make_shared<ConstantMedium>(box1, 0.01, Color(0, 0, 0)));
+    objects.add(std::make_shared<ConstantMedium>(box2, 0.01, Color(1, 1, 1)));
+
     return objects;
 }
