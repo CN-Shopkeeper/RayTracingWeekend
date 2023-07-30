@@ -15,6 +15,7 @@ Color RayColor(const Ray& r, const Hittable& world, int depth);
 HittableList RandomScene();
 HittableList TwoSpheres();
 HittableList TwoPerlinSpheres();
+HittableList Earth();
 
 int main() {
     //  Image
@@ -50,8 +51,14 @@ int main() {
 
             break;
 
-        default:
+        case 3:
             world = TwoPerlinSpheres();
+            lookFrom = Point3(13, 2, 3);
+            lookAt = Point3(0, 0, 0);
+            vfov = 20.0;
+
+        default:
+            world = Earth();
             lookFrom = Point3(13, 2, 3);
             lookAt = Point3(0, 0, 0);
             vfov = 20.0;
@@ -182,4 +189,13 @@ HittableList TwoPerlinSpheres() {
     objects.add(std::make_shared<Sphere>(
         Point3(0, 2, 0), 2, std::make_shared<Lambertian>(pertext)));
     return objects;
+}
+
+HittableList Earth() {
+    auto earthTexture =
+        std::make_shared<ImageTexture>("resources/earthmap.jpg");
+    auto earthSurface = std::make_shared<Lambertian>(earthTexture);
+    auto globe = std::make_shared<Sphere>(Point3{0, 0, 0}, 2, earthSurface);
+
+    return HittableList(globe);
 }

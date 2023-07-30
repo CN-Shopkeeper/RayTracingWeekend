@@ -1,6 +1,9 @@
 #pragma once
 
+#include <iostream>
+
 #include "perlin.hpp"
+#include "rtw_std_image.hpp"
 #include "rtweekend.hpp"
 
 class Texture {
@@ -58,5 +61,59 @@ class NoiseTexture : public Texture {
     virtual Color Value(double u, double v, const Point3& p) const override {
         return Color{1, 1, 1} * 0.5 *
                (1 + sin(scale_ * p.Z() + 10 * noise_.Turb(p)));
+    }
+};
+
+class ImageTexture : public Texture {
+   private:
+    unsigned char* data_;
+    int width_, height_;
+    int bytesPerScaline_;
+
+   public:
+    const static int bytesPerPixel = 3;
+
+    ImageTexture()
+        : data_(nullptr), width_(0), height_(0), bytesPerScaline_(0) {}
+
+    ImageTexture(const char* filename) {
+        auto componentsPerPixel = bytesPerPixel;
+
+        data_ = stbi_load(filename, &width_, &height_, &componentsPerPixel,
+                          componentsPerPixel);
+
+        if (!data_) {
+            std::cerr << "ERROR: Could not load texture image file '"
+                      << filename << "'.\n";
+            width_ = height_ = 0;
+        }
+
+        bytesPerScaline_ = bytesPerPixel * width_;
+    }
+
+    ~ImageTexture() { delete data_; }
+
+    virtual Color Value(double u, double v, const Point3& p) const override {
+        // If we have no texture data, then return solid cyan as a debugging aid
+        if (data_ == nullptr) {
+            return Color{0, 1, 1};
+        }
+
+        // Clamp input texture coordinates to [0,1] x [1,0]
+        u = Clamp(u, 0.0, 1.0);
+        v = 1.0 - Clamp(v, 0.0, 1.0);  // Flip V to image coordinates
+
+        auto i = static_cast<int>(u * width_);
+        auto j = static_cast<int>(v * height_);
+
+        // Clamp integer mapping, since actual coordinates should be less
+        // than 1.0
+        if (i >= width_) i = width_ - 1;
+        if (j >= height_) j = height_ - 1;
+
+        const auto colorScale = 1.0 / 255.0;
+        auto pixel = data_ + j * bytesPerScaline_ + i * bytesPerPixel;
+        return Color{colorScale * pixel[0], colorScale * pixel[1],
+                     colorScale * pixel[2]};
     }
 };
