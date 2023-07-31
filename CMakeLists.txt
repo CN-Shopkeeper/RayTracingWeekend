@@ -14,3 +14,4 @@ include_directories(src/common)
 
 add_subdirectory(src/inOneWeekend)
 add_subdirectory(src/theNextWeek)
+add_subdirectory(src/theRestOfYourLife)
